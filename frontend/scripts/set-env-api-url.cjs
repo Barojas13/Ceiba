@@ -2,7 +2,8 @@ const fs = require('fs');
 const path = require('path');
 
 const defaultApiBase = 'https://eventosvivos-api.onrender.com';
-const rawBase = (process.env.API_URL || defaultApiBase).replace(/\/$/, '');
+const rawInput = (process.env.API_URL || defaultApiBase).replace(/\/$/, '');
+const rawBase = /^https?:\/\//i.test(rawInput) ? rawInput : `https://${rawInput}`;
 const apiUrl = rawBase.endsWith('/api') ? rawBase : `${rawBase}/api`;
 
 const content = `export const environment = {
