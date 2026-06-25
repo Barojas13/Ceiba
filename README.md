@@ -19,6 +19,7 @@ Sistema web de reservas de entradas para eventos culturales (conferencias, talle
 11. [Ejecución local](#ejecución-local)
 12. [Pruebas automatizadas](#pruebas-automatizadas)
 13. [Mapa de rutas del frontend](#mapa-de-rutas-del-frontend)
+14. [Despliegue en la nube (Render)](#despliegue-en-la-nube-render)
 
 ---
 
@@ -499,6 +500,39 @@ Resultado esperado: **14 passed**.
 | `/mis-reservas` | `authGuard` | Mis reservas y pagos |
 | `/admin/events/new` | `adminGuard` | Crear evento |
 | `/admin/login` | — | Redirige a `/login` |
+
+---
+
+## Despliegue en la nube (Render)
+
+La aplicación está preparada para desplegarse en [Render](https://render.com) (plan gratuito) con un solo blueprint.
+
+| Servicio | URL esperada |
+|----------|----------------|
+| **Frontend (Angular)** | https://eventosvivos-web.onrender.com |
+| **API (.NET + Swagger)** | https://eventosvivos-api.onrender.com/swagger |
+
+### Pasos (una sola vez)
+
+1. Crear cuenta en [render.com](https://render.com) con tu GitHub personal (`Barojas13`).
+2. En el dashboard: **New → Blueprint**.
+3. Conectar el repositorio `Barojas13/Ceiba`.
+4. Render detectará `render.yaml` y creará dos servicios: API (Docker) y web estática (Angular).
+5. Esperar a que ambos builds terminen en verde (el primero puede tardar ~5–10 min).
+6. Si el frontend no conecta con la API, en **eventosvivos-web → Manual Deploy → Clear build cache & deploy**.
+
+### Notas del despliegue
+
+- El plan gratuito **duerme** tras ~15 min sin uso; el primer acceso puede tardar ~1 min en despertar.
+- La base SQLite se reinicia en cada redeploy (datos de demo; los venues iniciales se recrean con migraciones).
+- Swagger queda disponible en producción para evaluar la API.
+- CORS acepta `localhost` y cualquier subdominio `*.onrender.com`.
+
+### Archivos de despliegue
+
+- `render.yaml` — definición de servicios
+- `backend/Dockerfile` — imagen de la API
+- `frontend/scripts/set-env-api-url.cjs` — inyecta la URL de la API en el build
 
 ---
 
