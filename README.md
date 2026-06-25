@@ -92,8 +92,8 @@ Cieba/
             ├── services/               # Clientes HTTP hacia la API
             ├── guards/                 # Protección de rutas (auth, admin)
             ├── interceptors/           # Interceptor JWT
-            ├── validators/               # Validaciones de formularios
-            ├── utils/                  # Reglas de negocio espejo, errores API, formato precio
+            ├── validators/             # Validaciones de formularios (+ *.spec.ts)
+            ├── utils/                  # Reglas de negocio espejo, errores API, formato precio (+ *.spec.ts)
             └── models/                 # Interfaces TypeScript
 ```
 
@@ -470,6 +470,8 @@ El backend permite peticiones desde `http://localhost:4200` (configurado en `Pro
 
 ## Pruebas automatizadas
 
+### Backend
+
 Proyecto: `backend/tests/EventosVivos.Tests`
 
 **14 pruebas unitarias** con xUnit, Moq y FluentAssertions:
@@ -486,6 +488,34 @@ dotnet test
 ```
 
 Resultado esperado: **14 passed**.
+
+### Frontend
+
+Proyecto: `frontend/src/app` (archivos `*.spec.ts`)
+
+**37 pruebas unitarias** con Jasmine y Karma sobre reglas de negocio, validadores y utilidades:
+
+| Archivo | Qué valida |
+|---------|------------|
+| `business-rules.util.spec.ts` | Reserva permitida, límites 24h/precio alto, penalización por cancelación |
+| `reservation-form.validators.spec.ts` | Cantidad máxima por transacción |
+| `event-form.validators.spec.ts` | Fechas futuras, fin > inicio, fin de semana nocturno, capacidad venue |
+| `price-format.util.spec.ts` | Parseo y formato de precios |
+| `api-error.util.spec.ts` | Mensajes de error HTTP al usuario |
+
+```powershell
+cd frontend
+npm test
+```
+
+Modo CI (sin watch, Chrome headless):
+
+```powershell
+cd frontend
+npm run test:ci
+```
+
+Resultado esperado: **37 SUCCESS**.
 
 ---
 
