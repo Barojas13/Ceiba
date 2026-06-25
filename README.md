@@ -512,15 +512,6 @@ La aplicación está preparada para desplegarse en [Render](https://render.com) 
 | **Frontend (Angular)** | https://eventosvivos-web.onrender.com |
 | **API (.NET + Swagger)** | https://eventosvivos-api.onrender.com/swagger |
 
-### Pasos (una sola vez)
-
-1. Crear cuenta en [render.com](https://render.com) con tu GitHub personal (`Barojas13`).
-2. En el dashboard: **New → Blueprint**.
-3. Conectar el repositorio `Barojas13/Ceiba`.
-4. Render detectará `render.yaml` y creará dos servicios: API (Docker) y web estática (Angular).
-5. Esperar a que ambos builds terminen en verde (el primero puede tardar ~5–10 min).
-6. Si el frontend no conecta con la API, en **eventosvivos-web → Manual Deploy → Clear build cache & deploy**.
-
 ### Notas del despliegue
 
 - El plan gratuito **duerme** tras ~15 min sin uso; el primer acceso puede tardar ~1 min en despertar.
