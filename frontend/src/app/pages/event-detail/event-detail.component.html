@@ -1,0 +1,634 @@
+<section class="page">
+
+  <a routerLink="/" class="back-link">← Volver al listado</a>
+
+
+
+  @if (loading()) {
+
+    <div class="loading-state">
+
+      <div class="spinner" aria-hidden="true"></div>
+
+      <p>Cargando evento...</p>
+
+    </div>
+
+  }
+
+
+
+  @if (error() && !event()) {
+
+    <p class="alert error">{{ error() }}</p>
+
+  }
+
+
+
+  @if (event(); as eventData) {
+
+    <div class="event-hero" [class]="'type-accent-' + eventData.type">
+
+      <div class="event-hero-badges">
+
+        <span class="badge" [class]="'type-' + eventData.type">{{ EventTypeLabels[eventData.type] }}</span>
+
+        <span class="badge status" [class.status-active]="eventData.status === EventStatus.Activo">
+
+          {{ EventStatusLabels[eventData.status] }}
+
+        </span>
+
+      </div>
+
+      <h1>{{ eventData.title }}</h1>
+
+      <p class="event-hero-venue">📍 {{ eventData.venueName }}</p>
+
+      <div class="event-hero-stats">
+
+        <div class="stat-pill">
+
+          <span class="stat-label">Precio</span>
+
+          <span class="stat-value">{{ eventData.ticketPrice | currency: 'USD':'symbol':'1.2-2' }}</span>
+
+        </div>
+
+        <div class="stat-pill">
+
+          <span class="stat-label">Capacidad</span>
+
+          <span class="stat-value">{{ eventData.maxCapacity }} personas</span>
+
+        </div>
+
+        <div class="stat-pill">
+
+          <span class="stat-label">Inicio</span>
+
+          <span class="stat-value">{{ eventData.startDate | date: 'd MMM y, HH:mm' }}</span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+    <div #notificationAnchor class="notification-anchor"></div>
+
+
+
+    @if (reserveConfirmation(); as confirmation) {
+
+      <article class="feedback-banner success reserve-confirmation" role="status">
+
+        <div class="feedback-banner-header">
+
+          <span class="feedback-icon" aria-hidden="true">✅</span>
+
+          <div>
+
+            <h3>¡Reserva creada correctamente!</h3>
+
+            <p class="feedback-subtitle">Revisa el resumen y guarda tu ID de reserva</p>
+
+          </div>
+
+          <button type="button" class="feedback-dismiss" (click)="reserveConfirmation.set(undefined)" aria-label="Cerrar">
+
+            ×
+
+          </button>
+
+        </div>
+
+        <div class="confirmation-grid">
+
+          <div class="confirmation-item">
+
+            <span class="confirmation-label">Entradas</span>
+
+            <span class="confirmation-value">{{ confirmation.quantity }}</span>
+
+          </div>
+
+          <div class="confirmation-item">
+
+            <span class="confirmation-label">Total a pagar</span>
+
+            <span class="confirmation-value highlight">{{ confirmation.total | currency: 'USD':'symbol':'1.2-2' }}</span>
+
+          </div>
+
+          <div class="confirmation-item">
+
+            <span class="confirmation-label">Comprador</span>
+
+            <span class="confirmation-value">{{ confirmation.buyerName }}</span>
+
+          </div>
+
+          <div class="confirmation-item">
+
+            <span class="confirmation-label">Estado</span>
+
+            <span class="confirmation-value">{{ ReservationStatusLabels[confirmation.reservation.status] }}</span>
+
+          </div>
+
+        </div>
+
+        <div class="reservation-id-box">
+
+          <span class="confirmation-label">Tu ID de reserva</span>
+
+          <div class="reservation-id-row">
+
+            <code>{{ confirmation.reservation.id }}</code>
+
+            <button type="button" class="btn secondary btn-sm" (click)="copyReservationId(confirmation.reservation.id)">
+
+              Copiar ID
+
+            </button>
+
+          </div>
+
+          <p class="feedback-hint">Siguiente paso: completa el pago para recibir tu código de entrada.</p>
+
+          @if (confirmation.reservation.status === ReservationStatus.PendientePago) {
+            <button
+              type="button"
+              class="btn primary btn-full pay-now-btn"
+              (click)="payFromConfirmation()"
+              [disabled]="actionLoading()"
+            >
+              {{ actionLoading() ? 'Procesando pago...' : 'Pagar ahora — ' + (confirmation.total | currency: 'USD':'symbol':'1.2-2') }}
+            </button>
+          } @else if (confirmation.reservation.reservationCode) {
+            <p class="feedback-hint">Código de entrada: <code class="code-highlight">{{ confirmation.reservation.reservationCode }}</code></p>
+          }
+
+          <p class="feedback-hint">También puedes pagar después en <a routerLink="/mis-reservas">Mis reservas</a>.</p>
+
+        </div>
+
+      </article>
+
+    }
+
+
+
+    @if (pageNotification(); as notification) {
+
+      <article class="feedback-banner" [class.success]="notification.type === 'success'" [class.error]="notification.type === 'error'" role="alert">
+
+        <div class="feedback-banner-header">
+
+          <span class="feedback-icon" aria-hidden="true">{{ notification.type === 'success' ? '✅' : '⚠️' }}</span>
+
+          <div>
+
+            <h3>{{ notification.title }}</h3>
+
+          </div>
+
+          <button type="button" class="feedback-dismiss" (click)="dismissNotification()" aria-label="Cerrar">
+
+            ×
+
+          </button>
+
+        </div>
+
+        <ul class="feedback-details">
+
+          @for (detail of notification.details; track detail) {
+
+            <li>{{ detail }}</li>
+
+          }
+
+        </ul>
+
+      </article>
+
+    }
+
+
+
+    @if (eventData.status === EventStatus.Completado) {
+
+      <p class="alert error">Este evento ya finalizó. No se aceptan reservas.</p>
+
+    }
+
+
+
+    <div class="detail-grid">
+
+      <article class="card info-card">
+
+        <h2>📋 Información del evento</h2>
+
+        <p class="description-full">{{ eventData.description }}</p>
+
+        <ul class="meta info-meta">
+
+          <li><span class="meta-icon">📅</span> <strong>Inicio:</strong> {{ eventData.startDate | date: 'full' }}</li>
+
+          <li><span class="meta-icon">🏁</span> <strong>Fin:</strong> {{ eventData.endDate | date: 'full' }}</li>
+
+          <li><span class="meta-icon">💰</span> <strong>Precio:</strong> {{ eventData.ticketPrice | currency: 'USD' }}</li>
+
+          <li><span class="meta-icon">👥</span> <strong>Capacidad:</strong> {{ eventData.maxCapacity }} personas</li>
+
+        </ul>
+
+      </article>
+
+
+
+      <article class="card action-card">
+
+        <h2>🎫 Reservar entradas</h2>
+
+        @if (!authService.isAuthenticated()) {
+
+          <p class="card-subtitle">Debes iniciar sesión para reservar entradas.</p>
+
+          <div class="auth-required-box">
+
+            <p>Tus reservas quedarán guardadas en tu cuenta para que siempre encuentres el ID y el estado de pago.</p>
+
+            <div class="actions">
+
+              <a routerLink="/login" [queryParams]="{ returnUrl: '/events/' + eventData.id }" class="btn primary">Iniciar sesión</a>
+
+              <a routerLink="/register" class="btn secondary">Crear cuenta</a>
+
+            </div>
+
+          </div>
+
+        } @else if (canReserve()) {
+
+          <p class="card-subtitle">Reservando como {{ authService.currentUserName() }}</p>
+
+          <p class="rules-hint">{{ quantityRuleHint() }}</p>
+
+          <form [formGroup]="reservationForm" (ngSubmit)="reserve()">
+
+            <label [class.invalid]="reservationForm.get('quantity')?.invalid && reservationForm.get('quantity')?.touched">
+
+              Cantidad
+
+              <input
+
+                type="number"
+
+                formControlName="quantity"
+
+                min="1"
+
+                [max]="maxQuantity()"
+
+              />
+
+              @if (quantityFieldError()) {
+
+                <span class="field-error">{{ quantityFieldError() }}</span>
+
+              }
+
+            </label>
+
+            <button type="submit" class="btn primary btn-full" [disabled]="actionLoading() || reservationForm.invalid">
+
+              {{ actionLoading() ? 'Procesando...' : 'Reservar entradas' }}
+
+            </button>
+
+          </form>
+
+          <p class="hint">Después de reservar, completa el pago en <a routerLink="/mis-reservas">Mis reservas</a>.</p>
+
+        } @else {
+
+          <p class="alert error">{{ reservationBlockedReason() }}</p>
+
+        }
+
+      </article>
+
+
+
+      @if (authService.isAuthenticated() && !authService.isAdmin()) {
+
+        <article class="card action-card">
+
+          <h2>💳 Pagar reserva</h2>
+
+          <p class="card-subtitle">Completa el pago de tus entradas pendientes</p>
+
+          <a routerLink="/mis-reservas" class="btn primary btn-full">Ir a pagar en Mis reservas</a>
+
+        </article>
+
+      }
+
+
+
+      @if (authService.isAdmin()) {
+
+      <article class="card action-card">
+
+        <h2>⚙️ Gestionar reserva (admin)</h2>
+
+        <p class="card-subtitle">Confirma pagos o cancela reservas por ID</p>
+
+        <p class="rules-hint" [class.warning]="hasCancelPenalty(eventData)">
+
+          {{ cancelPenaltyHint() }}
+
+        </p>
+
+        <label>
+
+          ID de reserva
+
+          <input type="text" [(ngModel)]="reservationIdInput" name="reservationId" placeholder="Pega aquí el ID de la reserva" />
+
+        </label>
+
+        <div class="actions">
+
+          <button type="button" class="btn primary" (click)="confirmPayment()" [disabled]="actionLoading()">
+
+            Confirmar pago
+
+          </button>
+
+          <button type="button" class="btn secondary" (click)="cancelReservation()" [disabled]="actionLoading()">
+
+            Cancelar reserva
+
+          </button>
+
+        </div>
+
+      </article>
+
+      }
+
+
+
+      @if (authService.isAdmin()) {
+
+        <article class="card action-card danger-card">
+
+          <h2>🗑️ Eliminar evento</h2>
+
+          <p class="card-subtitle">Elimina el evento de forma permanente</p>
+
+          <p class="rules-hint warning">
+
+            Al eliminar se borrarán también todas las reservas asociadas. Esta acción no se puede deshacer.
+
+          </p>
+
+          <button
+
+            type="button"
+
+            class="btn danger"
+
+            (click)="openDeleteConfirm()"
+
+            [disabled]="actionLoading()"
+
+          >
+
+            Eliminar evento
+
+          </button>
+
+        </article>
+
+
+
+        <article class="card action-card report-card">
+
+          <h2>📊 Reporte de ocupación</h2>
+
+          <p class="card-subtitle">Incluye el detalle de reservas canceladas</p>
+
+          <button type="button" class="btn primary" (click)="loadReport()" [disabled]="actionLoading()">
+
+            Ver reporte
+
+          </button>
+
+          @if (report(); as reportData) {
+
+            <div class="report-grid">
+
+              <div class="report-item">
+
+                <span class="report-number">{{ reportData.totalSoldTickets }}</span>
+
+                <span class="report-label">Confirmadas</span>
+
+              </div>
+
+              <div class="report-item">
+
+                <span class="report-number">{{ reportData.pendingTickets }}</span>
+
+                <span class="report-label">Pendientes</span>
+
+              </div>
+
+              <div class="report-item">
+
+                <span class="report-number">{{ reportData.availableTickets }}</span>
+
+                <span class="report-label">Disponibles</span>
+
+              </div>
+
+              <div class="report-item">
+
+                <span class="report-number">{{ reportData.lostTickets }}</span>
+
+                <span class="report-label">No recuperables</span>
+
+              </div>
+
+              <div class="report-item">
+
+                <span class="report-number">{{ reportData.occupancyPercentage }}%</span>
+
+                <span class="report-label">Ocupación</span>
+
+              </div>
+
+              <div class="report-item highlight">
+
+                <span class="report-number">{{ reportData.totalRevenue | currency: 'USD':'symbol':'1.0-0' }}</span>
+
+                <span class="report-label">Ingresos</span>
+
+              </div>
+
+            </div>
+
+
+
+            @if (reportData.cancelledReservations.length > 0) {
+
+              <div class="cancelled-section">
+
+                <h3>Reservas canceladas ({{ reportData.cancelledReservations.length }})</h3>
+
+                <div class="cancelled-table-wrap">
+
+                  <table class="cancelled-table">
+
+                    <thead>
+
+                      <tr>
+
+                        <th>Comprador</th>
+
+                        <th>Entradas</th>
+
+                        <th>Cancelada</th>
+
+                        <th>Estado entradas</th>
+
+                      </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                      @for (item of reportData.cancelledReservations; track item.id) {
+
+                        <tr>
+
+                          <td>{{ item.buyerName }}</td>
+
+                          <td>{{ item.quantity }}</td>
+
+                          <td>{{ item.cancelledAt ? (item.cancelledAt | date: 'd MMM y, HH:mm') : '—' }}</td>
+
+                          <td>
+
+                            @if (item.lostTickets > 0) {
+
+                              <span class="badge-lost">{{ item.lostTickets }} no recuperables</span>
+
+                            } @else {
+
+                              <span class="badge-returned">Liberadas</span>
+
+                            }
+
+                          </td>
+
+                        </tr>
+
+                      }
+
+                    </tbody>
+
+                  </table>
+
+                </div>
+
+              </div>
+
+            } @else {
+
+              <p class="hint report-empty">No hay reservas canceladas registradas.</p>
+
+            }
+
+          }
+
+        </article>
+
+      }
+
+    </div>
+
+  }
+
+</section>
+
+
+
+@if (showDeleteConfirm() && event(); as eventData) {
+
+  <div class="confirm-modal-backdrop" (click)="closeDeleteConfirm()" role="presentation">
+
+    <div
+
+      class="confirm-modal"
+
+      role="alertdialog"
+
+      aria-labelledby="delete-modal-title"
+
+      aria-describedby="delete-modal-desc"
+
+      (click)="$event.stopPropagation()"
+
+    >
+
+      <div class="confirm-modal-icon" aria-hidden="true">🗑️</div>
+
+      <h3 id="delete-modal-title">¿Eliminar este evento?</h3>
+
+      <p id="delete-modal-desc" class="confirm-modal-text">
+
+        Vas a eliminar <strong>{{ eventData.title }}</strong> de forma permanente.
+
+      </p>
+
+      <ul class="confirm-modal-list">
+
+        <li>Se borrarán todas las reservas asociadas.</li>
+
+        <li>Esta acción no se puede deshacer.</li>
+
+      </ul>
+
+      <div class="confirm-modal-actions">
+
+        <button type="button" class="btn secondary" (click)="closeDeleteConfirm()" [disabled]="actionLoading()">
+
+          Cancelar
+
+        </button>
+
+        <button type="button" class="btn danger" (click)="confirmDelete()" [disabled]="actionLoading()">
+
+          {{ actionLoading() ? 'Eliminando...' : 'Sí, eliminar evento' }}
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+}
+
+

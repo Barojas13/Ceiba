@@ -1,0 +1,22 @@
+## Build
+bin/
+obj/
+*.user
+*.suo
+
+## Database
+*.db
+*.db-shm
+*.db-wal
+
+## IDE
+.vs/
+.idea/
+
+## Node (Angular)
+node_modules/
+dist/
+
+## OS
+Thumbs.db
+.DS_Store

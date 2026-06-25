@@ -1,0 +1,28 @@
+<section class="page login-page">
+  <div class="card login-card">
+    <div class="login-icon" aria-hidden="true">🔐</div>
+    <h1>Acceso administrador</h1>
+    <p>Inicia sesión para crear eventos, confirmar pagos y ver reportes.</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <label>
+        Usuario
+        <input type="text" formControlName="username" autocomplete="username" placeholder="admin" />
+      </label>
+      <label>
+        Contraseña
+        <input type="password" formControlName="password" autocomplete="current-password" placeholder="••••••••" />
+      </label>
+
+      @if (error()) {
+        <p class="alert error">{{ error() }}</p>
+      }
+
+      <button type="submit" class="btn primary" [disabled]="loading()">
+        {{ loading() ? 'Ingresando...' : 'Ingresar' }}
+      </button>
+    </form>
+
+    <a routerLink="/" class="back-link">← Volver al inicio</a>
+  </div>
+</section>

@@ -1,0 +1,124 @@
+<section class="page">
+  <div class="hero">
+    <div class="hero-content">
+      <span class="hero-badge">Descubre experiencias únicas</span>
+      <h1>Eventos disponibles</h1>
+      <p>Explora conferencias, talleres y conciertos. Reserva tu entrada en segundos.</p>
+    </div>
+    @if (!loading() && events().length > 0) {
+      <div class="hero-stat">
+        <span class="hero-stat-number">{{ events().length }}</span>
+        <span class="hero-stat-label">{{ events().length === 1 ? 'evento activo' : 'eventos activos' }}</span>
+      </div>
+    }
+  </div>
+
+  <div class="card filters">
+    <div class="filters-header">
+      <h2>🔍 Filtros de búsqueda</h2>
+      <p>Encuentra el evento perfecto para ti</p>
+    </div>
+    <div class="filters-grid">
+      <label>
+        Tipo de evento
+        <select [(ngModel)]="filterType">
+          <option [ngValue]="undefined">Todos los tipos</option>
+          @for (type of eventTypes; track type.value) {
+            <option [ngValue]="type.value">{{ type.label }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        Lugar
+        <select [(ngModel)]="filterVenueId">
+          <option [ngValue]="undefined">Todos los lugares</option>
+          @for (venue of venues(); track venue.id) {
+            <option [ngValue]="venue.id">{{ venue.name }} ({{ venue.city }})</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        Estado
+        <select [(ngModel)]="filterStatus">
+          <option [ngValue]="undefined">Todos los estados</option>
+          @for (status of eventStatuses; track status.value) {
+            <option [ngValue]="status.value">{{ status.label }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        Buscar por título
+        <input type="text" [(ngModel)]="titleSearch" placeholder="Ej: conferencia, taller..." />
+      </label>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="btn primary" (click)="loadEvents()">Buscar eventos</button>
+      <button type="button" class="btn secondary" (click)="clearFilters()">Limpiar filtros</button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner" aria-hidden="true"></div>
+      <p>Cargando eventos...</p>
+    </div>
+  }
+
+  @if (error()) {
+    <p class="alert error">{{ error() }}</p>
+  }
+
+  @if (success()) {
+    <p class="alert success">{{ success() }}</p>
+  }
+
+  @if (!loading() && !error() && events().length === 0) {
+    <div class="card empty-state">
+      <div class="empty-state-icon">📭</div>
+      <h3>No se encontraron eventos</h3>
+      <p>Prueba ajustando los filtros o vuelve más tarde.</p>
+    </div>
+  }
+
+  <div class="events-grid">
+    @for (event of events(); track event.id) {
+      <article [class]="'card event-card type-accent-' + event.type">
+        <div class="event-card-top">
+          <div class="event-card-header">
+            <span class="badge" [class]="'type-' + event.type">{{ EventTypeLabels[event.type] }}</span>
+            <span class="badge status" [class.status-active]="event.status === 1">
+              {{ EventStatusLabels[event.status] }}
+            </span>
+          </div>
+          <h3>{{ event.title }}</h3>
+          <p class="venue">📍 {{ event.venueName }}</p>
+        </div>
+
+        <p class="description">{{ event.description }}</p>
+
+        <ul class="meta">
+          <li>
+            <span class="meta-icon">📅</span>
+            {{ event.startDate | date: 'EEEE, d MMM y · HH:mm' }}
+          </li>
+          <li>
+            <span class="meta-icon">👥</span>
+            Capacidad: {{ event.maxCapacity }} personas
+          </li>
+        </ul>
+
+        <div class="event-card-footer">
+          <div class="price-tag">
+            {{ event.ticketPrice | currency: 'USD':'symbol':'1.2-2' }}
+            <small>/ entrada</small>
+          </div>
+          <a [routerLink]="['/events', event.id]" class="btn primary">Ver y reservar →</a>
+        </div>
+      </article>
+    }
+  </div>
+</section>

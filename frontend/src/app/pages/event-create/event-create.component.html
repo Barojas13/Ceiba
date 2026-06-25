@@ -1,0 +1,148 @@
+<section class="page page-narrow">
+  <header class="page-header">
+    <div>
+      <h1>✨ Crear evento</h1>
+      <p>Completa el formulario para publicar un nuevo evento</p>
+    </div>
+    <a routerLink="/" class="btn secondary">← Volver</a>
+  </header>
+
+  <div class="card form form-card" [formGroup]="form">
+    @if (validationErrors().length > 0) {
+      <div class="alert error validation-box" role="alert">
+        <strong>Revisa estos campos:</strong>
+        <ul>
+          @for (msg of validationErrors(); track msg) {
+            <li>{{ msg }}</li>
+          }
+        </ul>
+      </div>
+    }
+
+    @if (apiError()) {
+      <div class="alert error validation-box" role="alert">{{ apiError() }}</div>
+    }
+
+    @if (success()) {
+      <div class="alert success validation-box" role="status">{{ success() }}</div>
+    }
+
+    <div class="rules-panel">
+      <h3>Ten en cuenta</h3>
+      <ul>
+        <li>La capacidad no puede superar la del lugar seleccionado.</li>
+        <li>No puede haber dos eventos activos al mismo tiempo en el mismo lugar.</li>
+        <li>En fin de semana el evento no puede empezar después de las 10:00 p. m.</li>
+        <li>La fecha de inicio debe ser futura y la de fin, posterior al inicio.</li>
+      </ul>
+    </div>
+
+    <p class="form-section-title">Información básica</p>
+
+    <label [class.invalid]="isInvalid('title')">
+      <span class="field-label">Título <span class="required">*</span></span>
+      <input type="text" formControlName="title" placeholder="Ej: Conferencia de arquitectura" />
+      @if (fieldError('title')) {
+        <span class="field-error">{{ fieldError('title') }}</span>
+      }
+    </label>
+
+    <label [class.invalid]="isInvalid('description')">
+      <span class="field-label">Descripción <span class="required">*</span></span>
+      <textarea rows="4" formControlName="description" placeholder="Describe el evento (mínimo 10 caracteres)"></textarea>
+      <span class="hint" [class.invalid]="descriptionLength() < 10">
+        {{ descriptionLength() }} / 10 caracteres mínimo
+      </span>
+      @if (fieldError('description')) {
+        <span class="field-error">{{ fieldError('description') }}</span>
+      }
+    </label>
+
+    <p class="form-section-title">Detalles del evento</p>
+
+    <div class="form-grid">
+      <label [class.invalid]="isInvalid('venueId')">
+        <span class="field-label">Lugar <span class="required">*</span></span>
+        <select formControlName="venueId">
+          <option [ngValue]="null">Seleccionar...</option>
+          @for (venue of venues(); track venue.id) {
+            <option [ngValue]="venue.id">{{ venue.name }} (cap. {{ venue.capacity }})</option>
+          }
+        </select>
+        @if (fieldError('venueId')) {
+          <span class="field-error">{{ fieldError('venueId') }}</span>
+        }
+      </label>
+
+      <label [class.invalid]="isInvalid('maxCapacity')">
+        <span class="field-label">Capacidad máxima <span class="required">*</span></span>
+        <input type="number" formControlName="maxCapacity" min="1" [max]="selectedVenueCapacity() ?? null" />
+        @if (selectedVenueCapacity() !== null) {
+          <span class="hint">Capacidad máxima del lugar: {{ selectedVenueCapacity() }}</span>
+        }
+        @if (fieldError('maxCapacity')) {
+          <span class="field-error">{{ fieldError('maxCapacity') }}</span>
+        }
+      </label>
+
+      <label>
+        <span class="field-label">Tipo <span class="required">*</span></span>
+        <select formControlName="type">
+          @for (type of eventTypes; track type.value) {
+            <option [ngValue]="type.value">{{ type.label }}</option>
+          }
+        </select>
+      </label>
+
+      <label [class.invalid]="isInvalid('ticketPrice')">
+        <span class="field-label">Precio entrada <span class="required">*</span></span>
+        <div class="price-input">
+          <span class="price-prefix" aria-hidden="true">$</span>
+          <input
+            type="text"
+            inputmode="decimal"
+            formControlName="ticketPrice"
+            placeholder="0.00"
+            (focus)="unformatTicketPriceField()"
+            (blur)="formatTicketPriceField()"
+          />
+        </div>
+        <span class="hint">Puedes usar decimales. Ejemplo: 50,000.00</span>
+        @if (ticketPricePreview() && !isInvalid('ticketPrice')) {
+          <span class="hint price-preview">Precio: {{ ticketPricePreview() }}</span>
+        }
+        @if (fieldError('ticketPrice')) {
+          <span class="field-error">{{ fieldError('ticketPrice') }}</span>
+        }
+      </label>
+    </div>
+
+    <p class="form-section-title">Fechas y horarios</p>
+
+    <div class="form-grid">
+      <label [class.invalid]="isInvalid('startDate')">
+        <span class="field-label">Fecha inicio <span class="required">*</span></span>
+        <input type="datetime-local" formControlName="startDate" [min]="minDateTimeLocal()" />
+        <span class="hint">Debe ser posterior a la hora actual.</span>
+        @if (fieldError('startDate')) {
+          <span class="field-error">{{ fieldError('startDate') }}</span>
+        }
+      </label>
+
+      <label [class.invalid]="isInvalid('endDate')">
+        <span class="field-label">Fecha fin <span class="required">*</span></span>
+        <input type="datetime-local" formControlName="endDate" [min]="minEndDateTimeLocal()" />
+        <span class="hint">Debe ser posterior a la fecha de inicio.</span>
+        @if (fieldError('endDate')) {
+          <span class="field-error">{{ fieldError('endDate') }}</span>
+        }
+      </label>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn primary" (click)="submit()" [disabled]="loading()">
+        {{ loading() ? 'Guardando...' : 'Crear evento' }}
+      </button>
+    </div>
+  </div>
+</section>

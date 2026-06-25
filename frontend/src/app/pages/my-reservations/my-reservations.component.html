@@ -1,0 +1,106 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <h1>🎫 Mis reservas</h1>
+      <p>Aquí puedes pagar tus reservas pendientes y ver tus códigos de entrada.</p>
+    </div>
+    <a routerLink="/" class="btn secondary">← Ver eventos</a>
+  </header>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner" aria-hidden="true"></div>
+      <p>Cargando tus reservas...</p>
+    </div>
+  }
+
+  @if (message()) {
+    <p class="alert success">{{ message() }}</p>
+  }
+
+  @if (error()) {
+    <p class="alert error">{{ error() }}</p>
+  }
+
+  @if (!loading() && reservations().length === 0) {
+    <div class="card empty-state">
+      <div class="empty-state-icon">📭</div>
+      <h3>Aún no tienes reservas</h3>
+      <p>Explora los eventos disponibles y reserva tus entradas.</p>
+      <a routerLink="/" class="btn primary">Buscar eventos</a>
+    </div>
+  }
+
+  <div class="reservations-list">
+    @for (reservation of reservations(); track reservation.id) {
+      <article class="card reservation-card">
+        <div class="reservation-card-header">
+          <div>
+            <h2>{{ reservation.eventTitle ?? 'Evento' }}</h2>
+            @if (reservation.eventStartDate) {
+              <p class="event-date">{{ reservation.eventStartDate | date: 'EEEE, d MMM y · HH:mm' }}</p>
+            }
+          </div>
+          <span class="badge status">{{ ReservationStatusLabels[reservation.status] }}</span>
+        </div>
+
+        <div class="reservation-meta">
+          <div>
+            <span class="meta-label">Entradas</span>
+            <strong>{{ reservation.quantity }}</strong>
+          </div>
+          <div>
+            <span class="meta-label">Total</span>
+            <strong>{{ getTotal(reservation) | currency: 'USD':'symbol':'1.2-2' }}</strong>
+          </div>
+          <div>
+            <span class="meta-label">Reservado el</span>
+            <strong>{{ reservation.createdAt | date: 'd MMM y, HH:mm' }}</strong>
+          </div>
+        </div>
+
+        <div class="id-box">
+          <span class="meta-label">ID de reserva</span>
+          <div class="id-row">
+            <code>{{ reservation.id }}</code>
+            <button type="button" class="btn secondary btn-sm" (click)="copyId(reservation.id)">Copiar</button>
+          </div>
+        </div>
+
+        @if (reservation.reservationCode) {
+          <div class="code-box">
+            <span class="meta-label">Código de entrada</span>
+            <code class="code-highlight">{{ reservation.reservationCode }}</code>
+          </div>
+        }
+
+        <div class="reservation-actions">
+          <a [routerLink]="['/events', reservation.eventId]" class="btn secondary">Ver evento</a>
+          @if (reservation.status === ReservationStatus.PendientePago) {
+            <div class="payment-box">
+              <p class="payment-hint">Tu reserva está lista. Completa el pago para recibir tu código de entrada.</p>
+              <button
+                type="button"
+                class="btn primary"
+                (click)="payReservation(reservation)"
+                [disabled]="actionLoadingId() === reservation.id"
+              >
+                {{ actionLoadingId() === reservation.id ? 'Procesando pago...' : 'Pagar ahora — ' + (getTotal(reservation) | currency: 'USD':'symbol':'1.2-2') }}
+              </button>
+            </div>
+          }
+          @if (reservation.status === ReservationStatus.Confirmada) {
+            <button
+              type="button"
+              class="btn danger"
+              (click)="cancelReservation(reservation)"
+              [disabled]="actionLoadingId() === reservation.id"
+            >
+              {{ actionLoadingId() === reservation.id ? 'Cancelando...' : 'Cancelar reserva' }}
+            </button>
+          }
+        </div>
+      </article>
+    }
+  </div>
+</section>

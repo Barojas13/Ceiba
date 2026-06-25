@@ -1,0 +1,33 @@
+<div class="app-shell">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a routerLink="/" class="brand">
+        <span class="brand-icon" aria-hidden="true">🎟️</span>
+        <span class="brand-text">Eventos<strong>Vivos</strong></span>
+      </a>
+      <nav>
+        <a routerLink="/" class="nav-link">Eventos</a>
+        @if (authService.isAuthenticated()) {
+          <a routerLink="/mis-reservas" class="nav-link">Mis reservas</a>
+        }
+        @if (authService.isAdmin()) {
+          <a routerLink="/admin/events/new" class="btn primary nav-btn">+ Crear evento</a>
+        }
+        @if (authService.isAuthenticated()) {
+          <button type="button" class="btn ghost nav-logout" (click)="authService.logout()">Cerrar sesión</button>
+        } @else {
+          <a routerLink="/login" class="btn secondary nav-login">Iniciar sesión</a>
+          <a routerLink="/register" class="btn primary nav-btn">Registrarse</a>
+        }
+      </nav>
+    </div>
+  </header>
+
+  <main class="content">
+    <router-outlet />
+  </main>
+
+  <footer class="footer">
+    <p>EventosVivos — Reserva entradas para conferencias, talleres y conciertos</p>
+  </footer>
+</div>
