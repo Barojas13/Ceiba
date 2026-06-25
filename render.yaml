@@ -27,7 +27,4 @@ services:
       - key: NODE_VERSION
         value: 22.22.3
       - key: API_URL
-        fromService:
-          type: web
-          name: eventosvivos-api
-          property: host
+        value: https://eventosvivos-api.onrender.com
